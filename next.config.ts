@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
+const isStaticExport = process.env.NEXT_STATIC_EXPORT === '1'
+
 const nextConfig: NextConfig = {
-  // Enable static page generation
-  output: 'export',
+  // Enable static page generation only when NEXT_STATIC_EXPORT=1 is set.
+  // During development we want dynamic routes (API routes) to work.
+  output: isStaticExport ? 'export' : undefined,
 
   // Configure image optimization
   images: {

@@ -14,7 +14,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-5xl md:text-6xl font-bold text-foreground">
-              Continue learning and unleash your brains potential.
+              Continue learning and unleash your brain's potential!
             </h1>
             <p className="text-xl text-muted-foreground">
               Join millions of readers in their journey to discover amazing books!
@@ -71,7 +71,7 @@ export default function Home() {
                 <Sparkles className="w-6 h-6" />
               </div>
               <h3 className="font-semibold">{feature}</h3>
-              <p className="text-sm text-white/80">Begin your reading journey with nextBook</p>
+              <p className="text-sm text-white/80">Begin your reading journey with NextBook!</p>
             </div>
           ))}
         </div>

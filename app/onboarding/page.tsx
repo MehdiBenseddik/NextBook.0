@@ -6,6 +6,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ArrowRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
+function SmallSpinner() {
+  return (
+    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+    </svg>
+  )
+}
+
 const steps = [
   {
     id: 'usage',
@@ -46,12 +55,15 @@ export default function OnboardingPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
-      router.push('/recommendations')
+      // final step completed -> submit answers to API
+      await handleSubmit()
     }
   }
 
@@ -64,7 +76,39 @@ export default function OnboardingPage() {
   }
 
   const handleSkip = () => {
+    // mark as skipped and move on
+    setAnswers((prev) => ({ ...prev, [steps[currentStep].id]: 'Skipped' }))
     handleNext()
+  }
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    try {
+      const res = await fetch('/api/recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        // Show a friendly message to the user. The server will log full details.
+        const details = data?.details || data?.error || 'Failed to get recommendations'
+        setApiError(details)
+        setIsSubmitting(false)
+        return
+      }
+
+      // encode JSON results and navigate to recommendations page
+      const encoded = encodeURIComponent(JSON.stringify(data.recommendations))
+      router.push(`/recommendations?recs=${encoded}`)
+    } catch (err) {
+      console.error('submit error', err)
+      alert('Failed to generate recommendations. Check server logs or network tab for details.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -88,6 +132,11 @@ export default function OnboardingPage() {
             className="space-y-8"
           >
             <div className="text-center space-y-3">
+                {apiError && (
+                  <div className="mx-auto max-w-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                    {apiError}
+                  </div>
+                )}
               <div className="relative inline-block">
                 <h2 className="text-3xl md:text-4xl font-bold text-primary">
                   <span className="text-purple-400">*</span>
@@ -115,9 +164,10 @@ export default function OnboardingPage() {
                   />
                   <button 
                     onClick={handleNext}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20"
+                    disabled={isSubmitting}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full ${isSubmitting ? 'bg-primary/30 cursor-not-allowed' : 'bg-primary/10 hover:bg-primary/20'} text-primary`}
                   >
-                    <ArrowRight className="w-5 h-5" />
+                    {isSubmitting ? <SmallSpinner /> : <ArrowRight className="w-5 h-5" />}
                   </button>
                 </div>
                 {steps[currentStep].optional && (
@@ -140,13 +190,23 @@ export default function OnboardingPage() {
                         ...answers,
                         [steps[currentStep].id]: option
                       })
-                      handleNext()
+                      if (!isSubmitting) handleNext()
                     }}
                     className="w-full py-6 bg-white/80 hover:bg-white backdrop-blur-sm border-2 border-primary/20 text-primary font-semibold text-lg rounded-2xl"
                   >
                     {option}
                   </Button>
                 ))}
+              </div>
+            )}
+
+            {/* Submit / Retry area */}
+            {apiError && (
+              <div className="flex flex-col items-center gap-2">
+                <Button variant="destructive" onClick={() => { setApiError(null); handleSubmit(); }} disabled={isSubmitting}>
+                  {isSubmitting ? <SmallSpinner /> : 'Retry'}
+                </Button>
+                <p className="text-sm text-muted-foreground">If this keeps happening, check your OpenAI key and restart the dev server.</p>
               </div>
             )}
           </motion.div>
