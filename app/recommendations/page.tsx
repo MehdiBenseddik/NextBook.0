@@ -1,16 +1,27 @@
-"use client"
-
 import Image from "next/image"
-import { useSearchParams } from 'next/navigation'
 
-export default function RecommendationsPage() {
-  const searchParams = useSearchParams()
-  const recsParam = searchParams.get('recs')
+export default function RecommendationsPage({ searchParams }: any) {
+  const recsParam = searchParams?.recs
   let recommendations: any[] = []
   try {
     if (recsParam) recommendations = JSON.parse(decodeURIComponent(recsParam))
   } catch (e) {
     console.error('Failed to parse recommendations', e)
+  }
+
+  // If no recommendations were passed, show a friendly message.
+  if (!recsParam || recommendations.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold">No recommendations found</h2>
+          <p className="text-muted-foreground mt-2">Try the onboarding flow to generate reading suggestions.</p>
+          <div className="mt-4">
+            <a href="/onboarding" className="inline-block px-4 py-2 bg-primary text-white rounded-lg">Go to Onboarding</a>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
