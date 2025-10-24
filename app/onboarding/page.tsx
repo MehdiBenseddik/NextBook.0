@@ -18,7 +18,7 @@ function SmallSpinner() {
 const steps = [
   {
     id: 'usage',
-    question: 'How do you want to use nextBook?',
+    question: 'How do you want to use NextBook?',
     options: ['Challenge Your Reading Level', 'Read for Fun']
   },
   {
@@ -45,7 +45,6 @@ const steps = [
     id: 'story',
     question: 'Describe a cool story that you would like to read',
     subtext: 'e.g.) "A young magician learns magic to save the world"',
-    optional: true,
     type: 'input',
     placeholder: 'Type Here...'
   }
@@ -57,8 +56,22 @@ export default function OnboardingPage() {
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [fieldError, setFieldError] = useState<string | null>(null)
 
   const handleNext = async () => {
+    const step = steps[currentStep]
+
+    // If this is an input step, require a non-empty value before moving on
+    if (step.type === 'input') {
+      const val = (answers[step.id] || '').toString().trim()
+      if (!val) {
+        setFieldError('Please enter a response to continue.')
+        return
+      }
+    }
+
+    setFieldError(null)
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
@@ -161,8 +174,14 @@ export default function OnboardingPage() {
                       ...answers,
                       [steps[currentStep].id]: e.target.value
                     })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        handleNext()
+                      }
+                    }}
                   />
-                  <button 
+                  <button
                     onClick={handleNext}
                     disabled={isSubmitting}
                     className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full ${isSubmitting ? 'bg-primary/30 cursor-not-allowed' : 'bg-primary/10 hover:bg-primary/20'} text-primary`}
@@ -170,14 +189,10 @@ export default function OnboardingPage() {
                     {isSubmitting ? <SmallSpinner /> : <ArrowRight className="w-5 h-5" />}
                   </button>
                 </div>
-                {steps[currentStep].optional && (
-                  <Button
-                    onClick={handleSkip}
-                    variant="ghost"
-                    className="w-full text-primary/60 hover:text-primary hover:bg-white/50"
-                  >
-                    Skip this question
-                  </Button>
+
+                {/* Keep the error outside the relative container so it doesn't change the container height */}
+                {fieldError && (
+                  <p className="text-sm text-red-600 mt-2">{fieldError}</p>
                 )}
               </div>
             ) : (
