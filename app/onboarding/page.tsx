@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ArrowRight } from 'lucide-react'
@@ -52,6 +52,8 @@ const steps = [
 
 export default function OnboardingPage() {
   const router = useRouter()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
   const [currentStep, setCurrentStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -122,6 +124,25 @@ export default function OnboardingPage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (!mounted) {
+    // Render a simple, deterministic server-side placeholder to avoid hydration
+    // mismatches caused by browser extensions or injected attributes.
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-secondary/50 to-accent/30">
+        <div className="container max-w-2xl mx-auto px-4 py-16">
+          <div className="h-[30vh]" />
+          <div className="space-y-8">
+            <div className="text-center space-y-3">
+              <div className="relative inline-block">
+                <h2 className="text-3xl md:text-4xl font-bold text-primary">Loading…</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

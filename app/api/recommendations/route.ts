@@ -46,6 +46,103 @@ export async function POST(req: Request) {
       recommendations = [{ title: 'Recommendations', author: '', shortDescription: text, whyThisIsAGoodMatch: '' }]
     }
 
+    // If recommendations are an array, try to enrich each with a cover image
+    async function findCoverUrl(title?: string, author?: string) {
+      try {
+        if (!title && !author) return undefined
+
+        const tryUrls: string[] = []
+
+        // Helper to construct a search URL with arbitrary query string and limit
+        const search = async (query: string, limit = 5) => {
+          try {
+            const url = `https://openlibrary.org/search.json?${query}&limit=${limit}`
+            const res = await fetch(url)
+            if (!res.ok) return null
+            const data = await res.json()
+            return data?.docs || []
+          } catch (e) {
+            return null
+          }
+        }
+
+        // 1) Try the precise title+author params (existing behavior)
+        const parts: string[] = []
+        if (title) parts.push(`title=${encodeURIComponent(title)}`)
+        if (author) parts.push(`author=${encodeURIComponent(author)}`)
+        const precise = parts.join('&')
+        if (precise) {
+          const docs = await search(precise, 3)
+          if (docs && docs.length) {
+            for (const doc of docs) {
+              if (doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+              const edition = doc.cover_edition_key || doc.edition_key?.[0]
+              if (edition) return `https://covers.openlibrary.org/b/olid/${edition}-L.jpg`
+              // isbn fallback
+              const isbn = doc.isbn?.[0]
+              if (isbn) return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`
+            }
+          }
+        }
+
+        // 2) Try a combined full-text q= search (title + author)
+        const combinedQuery = encodeURIComponent(`${title || ''} ${author || ''}`)
+        const docs2 = await search(`q=${combinedQuery}`, 5)
+        if (docs2 && docs2.length) {
+          for (const doc of docs2) {
+            if (doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+            const edition = doc.cover_edition_key || doc.edition_key?.[0]
+            if (edition) return `https://covers.openlibrary.org/b/olid/${edition}-L.jpg`
+            const isbn = doc.isbn?.[0]
+            if (isbn) return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`
+          }
+        }
+
+        // 3) Try a cleaned title (remove parenthetical or subtitle parts)
+        const cleanedTitle = (title || '').replace(/\([^)]*\)/g, '').split(':')[0].trim()
+        if (cleanedTitle && cleanedTitle !== title) {
+          const docs3 = await search(`title=${encodeURIComponent(cleanedTitle)}`, 3)
+          if (docs3 && docs3.length) {
+            for (const doc of docs3) {
+              if (doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+              const edition = doc.cover_edition_key || doc.edition_key?.[0]
+              if (edition) return `https://covers.openlibrary.org/b/olid/${edition}-L.jpg`
+              const isbn = doc.isbn?.[0]
+              if (isbn) return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`
+            }
+          }
+        }
+
+        // 4) As a last resort, try the Open Library cover with a fuzzy search by title only
+        if (title) {
+          const docs4 = await search(`title=${encodeURIComponent(title)}`, 10)
+          if (docs4 && docs4.length) {
+            for (const doc of docs4) {
+              if (doc.cover_i) return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+              const edition = doc.cover_edition_key || doc.edition_key?.[0]
+              if (edition) return `https://covers.openlibrary.org/b/olid/${edition}-L.jpg`
+              const isbn = doc.isbn?.[0]
+              if (isbn) return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`
+            }
+          }
+        }
+
+        return undefined
+      } catch (err) {
+        console.warn('OpenLibrary lookup failed', err)
+        return undefined
+      }
+    }
+
+    if (Array.isArray(recommendations)) {
+      const enriched = await Promise.all(recommendations.map(async (rec: any) => {
+        if (rec.coverUrl) return rec
+        const coverUrl = await findCoverUrl(rec.title, rec.author)
+        return { ...rec, coverUrl }
+      }))
+      recommendations = enriched
+    }
+
     return NextResponse.json({ recommendations })
   } catch (error) {
     // Log full error on the server for debugging (do NOT return secrets to the client)
