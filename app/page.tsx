@@ -1,5 +1,4 @@
-'use client'
-
+"use client"
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Sparkles } from 'lucide-react'
@@ -13,11 +12,11 @@ export default function Home() {
       <div className="container mx-auto px-4 py-12">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground">
-              Continue learning and unleash your brain's potential!
+            <h1 className="text-5xl md:text-6xl font-bold text-primary">
+              Find your next book with NextBook!
             </h1>
             <p className="text-xl text-muted-foreground">
-              Join millions of readers in their journey to discover amazing books!
+              Find books that you love based on your personal interests, passions, and reading level!   
             </p>
             
             <div className="flex flex-wrap gap-4">
@@ -46,12 +45,12 @@ export default function Home() {
               className="rounded-2xl"
             />
             <div className="absolute top-4 right-4 bg-secondary/90 backdrop-blur-sm rounded-full p-4 shadow-lg">
-              <p className="font-bold text-2xl">1M+</p>
-              <p className="text-sm">Active Students</p>
+              <p className="font-bold text-2xl">Made with</p>
+              <p className="text-sm">Harvard Literacy Professor</p>
             </div>
             <div className="absolute bottom-4 left-4 bg-accent/90 backdrop-blur-sm rounded-full p-4 shadow-lg">
-              <p className="font-bold text-2xl">5000+</p>
-              <p className="text-sm">Free Books</p>
+              <p className="font-bold text-2xl">100%</p>
+              <p className="text-sm">Nonprofit</p>
             </div>
           </div>
         </div>
@@ -65,7 +64,7 @@ export default function Home() {
           ].map((feature) => (
             <div
               key={feature}
-              className="bg-primary p-6 rounded-2xl text-white space-y-2"
+              className="bg-primary p-6 rounded-2xl text-white space-y-2 transform transition-transform duration-150 hover:scale-105"
             >
               <div className="bg-white/20 w-12 h-12 rounded-full mx-auto flex items-center justify-center">
                 <Sparkles className="w-6 h-6" />

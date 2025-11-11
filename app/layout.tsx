@@ -1,11 +1,12 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Baloo_2 } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+// Baloo 2 is a friendly, rounded "bubble" font with personality.
+const baloo = Baloo_2({ subsets: ['latin'], weight: ['400', '700'], display: 'swap' })
 
 export const metadata: Metadata = {
-  title: 'nextBook',
+  title: 'NextBook',
   description: 'Your next favorite book discovery platform',
 }
 
@@ -16,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={baloo.className}>
         {children}
       </body>
     </html>

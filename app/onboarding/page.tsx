@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ArrowRight } from 'lucide-react'
+import { ChevronLeft, ArrowRight, Sparkles } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
 function SmallSpinner() {
@@ -172,10 +172,12 @@ export default function OnboardingPage() {
                   </div>
                 )}
               <div className="relative inline-block">
-                <h2 className="text-3xl md:text-4xl font-bold text-primary">
-                  <span className="text-purple-400">*</span>
-                  {steps[currentStep].question}
-                  <span className="text-purple-400">*</span>
+                <h2 className="text-3xl md:text-4xl font-bold text-primary text-center">
+                  <span className="relative inline-block px-3">
+                    {/* <Sparkles className="absolute left-0 top-1/2 -translate-y-1/2 text-purple-400 w-5 h-5" /> */}
+                    <span className="inline-block">{steps[currentStep].question}</span>
+                    {/* <Sparkles className="absolute right-0 top-1/2 -translate-y-1/2 text-purple-400 w-5 h-5" /> */}
+                  </span>
                 </h2>
               </div>
               {steps[currentStep].subtext && (
